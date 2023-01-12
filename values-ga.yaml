@@ -1,0 +1,5 @@
+ingress:
+  hosts:
+    - appsec-fast-api.${deploy_dns_zone}
+
+replicaCount: 2

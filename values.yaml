@@ -1,0 +1,54 @@
+image:
+  repository: ${deploy_registry}/cp/appsec-ken-test-api
+  tag: ${deploy_version}
+
+service:
+  port: 8080
+
+ingress:
+  hosts:
+    - appsec-ken-test-api.${deploy_env}.${deploy_dns_zone}
+  tls:
+    clusterIssuer: adp-ca-issuer
+
+liveness:
+  enabled: true
+  path: /health
+  periodSeconds: 20
+
+readiness:
+  enabled: true
+  path: /ready
+  initialDelaySeconds: 30
+  periodSeconds: 120
+  timeoutSeconds: 90
+  failureThreshold: 5
+
+container:
+  labels:
+    splunk.adp.com/source: ${deploy_project_name}_${deploy_env}_container
+    splunk.adp.com/splunk-index: "ctosec_main"
+    app: "asag"
+  envFromConfigMaps:
+      - name: infra-config-${deploy_env}
+
+  env:
+    DB_ORM_CREDS_FILE_LOCATION: "/vault/secret/vault-rds.properties"
+    PYTHONPATH: $PYTHONPATH:/app
+    SCHEMA: asag
+
+    AWS_DEFAULT_REGION: us-east-1
+    AWS_DEFAULT_OUTPUT: json
+    AWS_DEFAULT_PROFILE: default
+    ASAG_AWS_CREDS_LOCATION: /aws/credentials
+    DB_ORM_MAX_OVERFLOW: "-1"
+    DB_ORM_AUTO_COMMIT: "False"
+    USE_SPLUNK_LOGGER: "false"
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 1024Mi
+  requests:
+    cpu: 250m
+    memory: 512Mi
